@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#000080" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Delfo Studio 95</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <style>
+    /* ════════════════════════════════════════════
+       TOKENS
+    ════════════════════════════════════════════ */
+    :root {
+      --gray:        #c0c0c0;
+      --gray-mid:    #a0a0a0;
+      --gray-dark:   #808080;
+      --gray-darker: #404040;
+      --white:       #ffffff;
+      --black:       #000000;
+      --win-blue:    #000080;
+      --win-blue2:   #1084d0;
+      --teal:        #008080;
+      --green:       #00ff41;
+      --cyan:        #00ffff;
+      --yellow:      #ffff00;
+      --red:         #ff4444;
+      --magenta:     #ff00ff;
+
+      --border-out: inset -1px -1px 0 var(--gray-darker),
+                    inset  1px  1px 0 var(--white),
+                    inset -2px -2px 0 var(--gray-dark),
+                    inset  2px  2px 0 var(--gray);
+      --border-in:  inset  1px  1px 0 var(--gray-darker),
+                    inset -1px -1px 0 var(--white);
+
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* ════════════════════════════════════════════
+       RESET + BASE
+    ════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overscroll-behavior: none;
+    }
+
+    body {
+      background-color: var(--teal);
+      background-image:
+        repeating-linear-gradient(0deg,  rgba(0,0,0,.04) 0, rgba(0,0,0,.04) 1px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(90deg, rgba(0,0,0,.02) 0, rgba(0,0,0,.02) 1px, transparent 1px, transparent 3px);
+      font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, sans-serif;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+      padding-bottom: calc(36px + var(--safe-bottom));
+    }
+
+    /* scanlines */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        rgba(0,0,0,.07) 0px,
+        rgba(0,0,0,.07) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+      pointer-events: none;
+      z-index: 9000;
+    }
+
+    /* ════════════════════════════════════════════
+       SCREEN
+    ════════════════════════════════════════════ */
+    .screen {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 12px 0;
+    }
+
+    /* ════════════════════════════════════════════
+       WIN95 WINDOW CHROME
+    ════════════════════════════════════════════ */
+    .window {
+      background: var(--gray);
+      box-shadow: var(--border-out);
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .title-bar {
+      background: linear-gradient(90deg, var(--win-blue) 0%, var(--win-blue2) 100%);
+      color: var(--white);
+      font-weight: bold;
+      font-size: 12px;
+      padding: 4px 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .title-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .title-bar-icon { font-size: 14px; flex-shrink: 0; }
+
+    .title-bar-text {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+    }
+
+    .title-btns { display: flex; gap: 2px; flex-shrink: 0; }
+
+    .tbtn {
+      width: 20px; height: 18px;
+      background: var(--gray);
+      box-shadow: var(--border-out);
+      border: none;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--black);
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      font-family: inherit;
+    }
+
+    .tbtn:active { box-shadow: var(--border-in); }
+
+    /* ════════════════════════════════════════════
+       NEON HEADER
+    ════════════════════════════════════════════ */
+    .app-header {
+      background: var(--black);
+      padding: 14px 12px 12px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .app-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 50% -20%, rgba(0,255,65,.2) 0%, transparent 60%),
+        radial-gradient(ellipse at 10% 110%, rgba(0,100,255,.12) 0%, transparent 50%),
+        radial-gradient(ellipse at 90% 110%, rgba(255,0,180,.1) 0%, transparent 50%);
+    }
+
+    .app-title {
+      font-family: 'VT323', monospace;
+      font-size: 38px;
+      color: var(--green);
+      text-shadow: 0 0 8px var(--green), 0 0 24px rgba(0,255,65,.5);
+      letter-spacing: 1px;
+      line-height: 1;
+      position: relative;
+      animation: flicker 6s infinite;
+    }
+
+    .app-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--cyan);
+      text-shadow: 0 0 6px var(--cyan);
+      letter-spacing: 3px;
+      margin-top: 3px;
+      position: relative;
+    }
+
+    @keyframes flicker {
+      0%,94%,100% { opacity:1 }
+      95% { opacity:.8 }
+      96% { opacity:1 }
+      97% { opacity:.85 }
+    }
+
+    /* ════════════════════════════════════════════
+       TICKER
+    ════════════════════════════════════════════ */
+    .ticker-wrap {
+      background: var(--win-blue);
+      overflow: hidden;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      border-top: 1px solid #0000ee;
+    }
+
+    .ticker-inner {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--yellow);
+      white-space: nowrap;
+      animation: tick 22s linear infinite;
+      padding-left: 100%;
+    }
+
+    @keyframes tick {
+      from { transform: translateX(0) }
+      to   { transform: translateX(-100%) }
+    }
+
+    /* ════════════════════════════════════════════
+       BODY
+    ════════════════════════════════════════════ */
+    .win-body {
+      padding: 14px 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* ════════════════════════════════════════════
+       VISUALIZER
+    ════════════════════════════════════════════ */
+    .viz {
+      background: var(--black);
+      box-shadow: var(--border-in);
+      height: 36px;
+      display: flex;
+      align-items: flex-end;
+      padding: 3px 4px;
+      gap: 2px;
+      overflow: hidden;
+    }
+
+    .vbar {
+      flex: 1;
+      background: linear-gradient(to top, #00cc00, #aaff00, #ffff00, #ff4400);
+      height: 3px;
+      transition: height .08s ease;
+    }
+
+    /* ════════════════════════════════════════════
+       URL INPUT
+    ════════════════════════════════════════════ */
+    .section-label {
+      font-size: 11px;
+      color: var(--gray-darker);
+      margin-bottom: 5px;
+    }
+
+    .url-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .url-input {
+      width: 100%;
+      background: var(--white);
+      box-shadow: var(--border-in);
+      border: none;
+      padding: 12px 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 13px;
+      color: var(--black);
+      outline: none;
+      min-height: 48px;
+      -webkit-appearance: none;
+      border-radius: 0;
+    }
+
+    .url-input::placeholder { color: var(--gray-dark); }
+
+    .url-input:focus {
+      outline: 2px dotted var(--black);
+      outline-offset: -3px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border: 1px solid;
+      line-height: 1.4;
+    }
+
+    .chip-yt  { color: #ff3030; border-color: #ff3030; background: rgba(255,48,48,.08); }
+    .chip-tt  { color: var(--magenta); border-color: var(--magenta); background: rgba(255,0,255,.08); }
+    .chip-ig  { color: #ffaa00; border-color: #ffaa00; background: rgba(255,170,0,.08); }
+    .chip-limit { color: var(--gray-darker); border-color: var(--gray-dark); margin-left: auto; font-size: 9px; align-self: center; }
+
+    /* ════════════════════════════════════════════
+       BIG CONVERT BUTTON
+    ════════════════════════════════════════════ */
+    .btn-convert {
+      width: 100%;
+      min-height: 56px;
+      background: var(--gray);
+      box-shadow: var(--border-out);
+      border: none;
+      font-family: 'VT323', monospace;
+      font-size: 28px;
+      letter-spacing: 2px;
+      color: var(--black);
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+    }
+
+    .btn-convert::before {
+      content: '';
+      position: absolute;
+      inset: 4px;
+      border: 1px dotted var(--black);
+      pointer-events: none;
+    }
+
+    .btn-convert:active, .btn-convert.pressed {
+      box-shadow: var(--border-in);
+    }
+
+    .btn-convert:disabled {
+      color: var(--gray-dark);
+      cursor: default;
+    }
+
+    .btn-convert:disabled::before { display: none; }
+
+    .btn-icon { font-size: 22px; }
+
+    /* ════════════════════════════════════════════
+       STATUS + PROGRESS
+    ════════════════════════════════════════════ */
+    .status-line {
+      background: var(--white);
+      box-shadow: var(--border-in);
+      padding: 8px 10px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 12px;
+      color: var(--win-blue);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-height: 38px;
+    }
+
+    .sdot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--gray-dark);
+      transition: background .3s;
+    }
+    .sdot.idle    { background: var(--gray-dark); }
+    .sdot.working { background: var(--green); animation: blink .6s infinite; }
+    .sdot.done    { background: #00bb00; }
+    .sdot.error   { background: var(--red); }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+
+    .progress-track {
+      background: var(--white);
+      box-shadow: var(--border-in);
+      height: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--win-blue) 0px,
+        var(--win-blue) 12px,
+        var(--win-blue2) 12px,
+        var(--win-blue2) 24px
+      );
+      width: 0%;
+      transition: width .35s ease;
+    }
+
+    .progress-fill.indeterminate {
+      width: 42% !important;
+      animation: marquee .9s linear infinite;
+    }
+
+    @keyframes marquee {
+      0%   { transform: translateX(-100%) }
+      100% { transform: translateX(250%) }
+    }
+
+    .progress-pct {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-size: 11px;
+      font-weight: bold;
+      color: var(--white);
+      mix-blend-mode: difference;
+      filter: invert(1);
+    }
+
+    /* ════════════════════════════════════════════
+       PREVIEW CARD
+    ════════════════════════════════════════════ */
+    .preview-card {
+      display: none;
+      background: var(--black);
+      box-shadow: var(--border-in);
+      flex-direction: row;
+      overflow: hidden;
+    }
+
+    .preview-card.visible { display: flex; }
+
+    .preview-thumb-placeholder {
+      width: 80px;
+      min-width: 80px;
+      height: 60px;
+      background: #111;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      flex-shrink: 0;
+    }
+
+    .preview-info {
+      padding: 8px 10px;
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      justify-content: center;
+    }
+
+    .preview-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      text-shadow: 0 0 4px var(--green);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview-meta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 10px;
+      color: var(--cyan);
+      display: flex;
+      gap: 10px;
+    }
+
+    /* ════════════════════════════════════════════
+       DOWNLOAD RESULT
+    ════════════════════════════════════════════ */
+    .result-box {
+      display: none;
+      background: var(--black);
+      box-shadow: var(--border-in);
+      padding: 14px 12px;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      text-align: center;
+    }
+
+    .result-box.visible { display: flex; }
+
+    .result-name {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 11px;
+      color: var(--green);
+      text-shadow: 0 0 5px var(--green);
+      word-break: break-all;
+      line-height: 1.4;
+    }
+
+    .btn-download {
+      width: 100%;
+      min-height: 52px;
+      background: #001a00;
+      border: 2px solid #00aa00;
+      box-shadow: 0 0 12px rgba(0,255,65,.3), inset 0 0 8px rgba(0,255,65,.05);
+      color: var(--green);
+      font-family: 'VT323', monospace;
+      font-size: 26px;
+      letter-spacing: 2px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      text-shadow: 0 0 10px var(--green);
+      transition: background .15s, box-shadow .15s;
+    }
+
+    .btn-download:active {
+      background: #003300;
+      box-shadow: 0 0 18px rgba(0,255,65,.5);
+    }
+
+    /* ════════════════════════════════════════════
+       ERROR MODAL
+    ════════════════════════════════════════════ */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.visible { display: flex; }
+
+    .modal {
+      background: var(--gray);
+      box-shadow: var(--border-out), 4px 4px 0 rgba(0,0,0,.4);
+      width: 100%;
+      max-width: 360px;
+      animation: popIn .12s ease-out;
+    }
+
+    @keyframes popIn {
+      from { transform: scale(.94); opacity:.7 }
+      to   { transform: scale(1); opacity:1 }
+    }
+
+    .modal-body {
+      padding: 16px 14px 14px;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .modal-icon { font-size: 36px; flex-shrink: 0; line-height: 1; }
+
+    .modal-text { flex: 1; }
+
+    .modal-title {
+      font-weight: bold;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .modal-msg {
+      font-size: 12px;
+      color: var(--gray-darker);
+      line-height: 1.5;
+    }
+
+    .modal-footer {
+      border-top: 1px solid var(--gray-mid);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      min-width: 80px;
+      min-height: 32px;
+      background: var(--gray);
+      box-shadow: var(--border-out);
+      border: none;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      padding: 4px 12px;
+    }
+
+    .btn-sm:active { box-shadow: var(--border-in); }
+
+    .btn-sm.default {
+      font-weight: bold;
+      position: relative;
+    }
+
+    .btn-sm.default::before {
+      content: '';
+      position: absolute;
+      inset: 3px;
+      border: 1px dotted var(--black);
+    }
+
+    /* ════════════════════════════════════════════
+       SECONDARY ACTIONS
+    ════════════════════════════════════════════ */
+    .action-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-secondary {
+      flex: 1;
+      min-height: 40px;
+      background: var(--gray);
+      box-shadow: var(--border-out);
+      border: none;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-size: 12px;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .btn-secondary:active { box-shadow: var(--border-in); }
+
+    /* ════════════════════════════════════════════
+       TASKBAR
+    ════════════════════════════════════════════ */
+    .taskbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(36px + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      background: var(--gray);
+      box-shadow: 0 -2px 0 var(--white), 0 -3px 0 var(--gray-darker);
+      display: flex;
+      align-items: center;
+      padding-left: 4px;
+      padding-right: 4px;
+      gap: 4px;
+      z-index: 200;
+    }
+
+    .start-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      min-height: 26px;
+      background: var(--gray);
+      box-shadow: var(--border-out);
+      border: none;
+      font-weight: bold;
+      font-size: 12px;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      cursor: pointer;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
+
+    .start-btn:active { box-shadow: var(--border-in); }
+
+    .taskbar-sep {
+      width: 1px;
+      height: 22px;
+      background: var(--gray-dark);
+      box-shadow: 1px 0 0 var(--white);
+      flex-shrink: 0;
+    }
+
+    .taskbar-app {
+      flex: 1;
+      min-height: 26px;
+      background: var(--gray);
+      box-shadow: var(--border-in);
+      padding: 3px 8px;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .taskbar-clock {
+      flex-shrink: 0;
+      min-height: 26px;
+      box-shadow: var(--border-in);
+      padding: 3px 8px;
+      font-family: 'MS Sans Serif', Tahoma, sans-serif;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      background: var(--gray);
+    }
+
+    /* ════════════════════════════════════════════
+       DESKTOP (768px+)
+    ════════════════════════════════════════════ */
+    @media (min-width: 768px) {
+      .screen {
+        justify-content: center;
+        padding: 24px 24px 0;
+      }
+
+      .window {
+        filter: drop-shadow(4px 4px 0 rgba(0,0,0,.35));
+      }
+
+      .btn-convert { min-height: 52px; font-size: 26px; }
+      .app-title   { font-size: 44px; }
+
+      .url-input {
+        font-size: 14px;
+        min-height: 42px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="screen">
+    <div class="window">
+
+      <!-- Title bar -->
+      <div class="title-bar">
+        <div class="title-bar-left">
+          <span class="title-bar-icon">🎶</span>
+          <span class="title-bar-text">Delfo Studio 95</span>
+        </div>
+        <div class="title-btns">
+          <button class="tbtn">_</button>
+          <button class="tbtn">□</button>
+          <button class="tbtn" onclick="alert('Atrapado en los 90s.')">✕</button>
+        </div>
+      </div>
+
+      <!-- Neon header -->
+      <div class="app-header">
+        <div class="app-title">DELFO STUDIO 95</div>
+        <div class="app-sub">◈ VIDEO → MP3 ◈</div>
+      </div>
+
+      <!-- Ticker -->
+      <div class="ticker-wrap">
+        <div class="ticker-inner">
+          ★ YouTube · Shorts · TikTok · Instagram Reels ★ PEGA LA URL · TOCA CONVERTIR · DESCARGA ★ FREE · FAST · NO ADS ★ ©1995 DELFO SYSTEMS ★
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="win-body">
+
+        <!-- Visualizer -->
+        <div class="viz" id="viz"></div>
+
+        <!-- URL input -->
+        <div>
+          <div class="section-label">Pegar URL del video:</div>
+          <div class="url-wrap">
+            <input
+              type="url"
+              id="urlInput"
+              class="url-input"
+              placeholder="https://youtube.com/watch?v=..."
+              inputmode="url"
+              autocomplete="off"
+              autocorrect="off"
+              autocapitalize="off"
+              spellcheck="false"
+            />
+            <div class="chips">
+              <span class="chip chip-yt">▶ YT</span>
+              <span class="chip chip-yt">▶ Shorts</span>
+              <span class="chip chip-tt">♪ TikTok</span>
+              <span class="chip chip-ig">◉ IG Reels</span>
+              <span class="chip chip-limit">máx 10 min</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BIG convert button -->
+        <button class="btn-convert" id="convertBtn" onclick="startConvert()">
+          <span class="btn-icon">🎵</span>
+          CONVERTIR
+        </button>
+
+        <!-- Preview card -->
+        <div class="preview-card" id="previewCard">
+          <div class="preview-thumb-placeholder" id="previewThumb">🎬</div>
+          <div class="preview-info">
+            <div class="preview-title" id="previewTitle">—</div>
+            <div class="preview-meta">
+              <span id="previewPlatform">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Status + progress -->
+        <div>
+          <div class="status-line">
+            <div class="sdot idle" id="sdot"></div>
+            <span id="statusText">Listo. Pegá la URL y tocá Convertir.</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+            <div class="progress-pct" id="progressPct">0%</div>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div class="result-box" id="resultBox">
+          <div class="result-name" id="resultName">audio.mp3</div>
+          <button class="btn-download" id="downloadBtn">⬇ DESCARGAR MP3</button>
+        </div>
+
+        <!-- Secondary -->
+        <div class="action-row">
+          <button class="btn-secondary" onclick="clearAll()">Limpiar</button>
+          <button class="btn-secondary" onclick="showAbout()">Acerca de...</button>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ══ ERROR MODAL ══ -->
+  <div class="modal-backdrop" id="errorModal">
+    <div class="modal">
+      <div class="title-bar">
+        <div class="title-bar-left">
+          <span class="title-bar-icon">⛔</span>
+          <span class="title-bar-text" id="errTitle">Error</span>
+        </div>
+        <div class="title-btns">
+          <button class="tbtn" onclick="closeError()">✕</button>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-icon">⚠️</div>
+        <div class="modal-text">
+          <div class="modal-title" id="errHeading">Error</div>
+          <div class="modal-msg" id="errMsg">Ocurrió un error.</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm default" onclick="closeError()">Aceptar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ABOUT MODAL ══ -->
+  <div class="modal-backdrop" id="aboutModal">
+    <div class="modal">
+      <div class="title-bar">
+        <div class="title-bar-left">
+          <span class="title-bar-icon">ℹ️</span>
+          <span class="title-bar-text">Acerca de</span>
+        </div>
+        <div class="title-btns">
+          <button class="tbtn" onclick="document.getElementById('aboutModal').classList.remove('visible')">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" style="flex-direction:column; align-items:center; text-align:center; gap:8px;">
+        <div style="font-size:48px;">🎶</div>
+        <div style="font-family:'VT323',monospace; font-size:30px; color:var(--win-blue);">DELFO STUDIO 95</div>
+        <div style="font-size:12px;">Versión 1.0.0 (Build 950824)</div>
+        <div style="font-size:11px; color:var(--gray-darker); line-height:1.6;">
+          Convierte videos de YouTube, TikTok e Instagram a MP3.<br>
+          Powered by yt-dlp + ffmpeg.<br>
+          Sin base de datos · Sin almacenamiento · Sin ads.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-sm default" onclick="document.getElementById('aboutModal').classList.remove('visible')">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TASKBAR ══ -->
+  <div class="taskbar">
+    <button class="start-btn">🪟 Inicio</button>
+    <div class="taskbar-sep"></div>
+    <div class="taskbar-app">🎶 Delfo Studio 95</div>
+    <div class="taskbar-clock" id="clock">00:00</div>
+  </div>
+
+  <script>
+    // ── CONFIG ─────────────────────────────────
+    const BACKEND_URL =
+      (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+        ? 'http://localhost:8000'
+        : 'https://YOUR-RENDER-APP.onrender.com'; // ← reemplazá con tu URL de Render
+
+    // ── CLOCK ──────────────────────────────────
+    function tick() {
+      const n = new Date();
+      document.getElementById('clock').textContent =
+        String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+    }
+    tick(); setInterval(tick, 10000);
+
+    // ── VISUALIZER ─────────────────────────────
+    const vizEl = document.getElementById('viz');
+    const N = 24;
+    let bars = [], vizOn = false;
+    for (let i = 0; i < N; i++) {
+      const b = document.createElement('div');
+      b.className = 'vbar';
+      vizEl.appendChild(b);
+      bars.push(b);
+    }
+    function animViz() {
+      if (!vizOn) { bars.forEach(b => b.style.height = '3px'); return; }
+      bars.forEach(b => { b.style.height = (Math.random() * 30 + 3) + 'px'; });
+      setTimeout(() => requestAnimationFrame(animViz), 90);
+    }
+
+    // ── STATUS ─────────────────────────────────
+    function setStatus(txt, state = 'idle') {
+      document.getElementById('statusText').textContent = txt;
+      document.getElementById('sdot').className = 'sdot ' + state;
+    }
+
+    function setProgress(pct, indeterminate = false) {
+      const fill = document.getElementById('progressFill');
+      const label = document.getElementById('progressPct');
+      fill.classList.toggle('indeterminate', indeterminate);
+      if (!indeterminate) {
+        fill.style.width = pct + '%';
+        label.textContent = pct + '%';
+      } else {
+        label.textContent = '...';
+      }
+    }
+
+    // ── PLATFORM DETECT ────────────────────────
+    function detectPlatform(url) {
+      if (/youtube\.com\/shorts/i.test(url)) return 'YT Shorts';
+      if (/youtube\.com|youtu\.be/i.test(url)) return 'YouTube';
+      if (/tiktok\.com/i.test(url)) return 'TikTok';
+      if (/instagram\.com/i.test(url)) return 'Instagram';
+      return '?';
+    }
+
+    // ── VALIDATION ─────────────────────────────
+    function validateUrl(url) {
+      if (!url) return 'Por favor ingresá una URL.';
+      const ok = [
+        /youtube\.com\/watch/i, /youtu\.be\//i,
+        /youtube\.com\/shorts\//i, /tiktok\.com\//i,
+        /instagram\.com\/(reel|p|tv)\//i,
+      ].some(p => p.test(url));
+      if (!ok) return 'Plataforma no soportada. Usá YouTube, TikTok o Instagram Reels.';
+      try { new URL(url); } catch { return 'URL con formato inválido.'; }
+      return null;
+    }
+
+    // ── MODALS ─────────────────────────────────
+    function showError(title, msg) {
+      document.getElementById('errTitle').textContent = title;
+      document.getElementById('errHeading').textContent = title;
+      document.getElementById('errMsg').textContent = msg;
+      document.getElementById('errorModal').classList.add('visible');
+    }
+    function closeError() {
+      document.getElementById('errorModal').classList.remove('visible');
+    }
+    function showAbout() {
+      document.getElementById('aboutModal').classList.add('visible');
+    }
+
+    // ── CLEAR ──────────────────────────────────
+    function clearAll() {
+      document.getElementById('urlInput').value = '';
+      document.getElementById('resultBox').classList.remove('visible');
+      document.getElementById('previewCard').classList.remove('visible');
+      closeError();
+      setStatus('Listo. Pegá la URL y tocá Convertir.', 'idle');
+      setProgress(0);
+      vizOn = false; animViz();
+      document.getElementById('convertBtn').disabled = false;
+    }
+
+    // ── ERROR MAPPING ──────────────────────────
+    function friendlyError(msg) {
+      const m = (msg||'').toLowerCase();
+      if (m.includes('too long') || m.includes('duration') || m.includes('min'))
+        return ['Video muy largo', 'Este video supera los 10 minutos. Probá con uno más corto.'];
+      if (m.includes('ffmpeg'))
+        return ['Error de procesamiento', 'FFmpeg no pudo convertir el audio. El formato puede no ser compatible.'];
+      if (m.includes('failed to fetch') || m.includes('network') || m.includes('connection'))
+        return ['Sin conexión', 'No se pudo conectar al servidor. Verificá tu conexión e intentá de nuevo.'];
+      if (m.includes('private') || m.includes('unavailable') || m.includes('deleted') || m.includes('privado'))
+        return ['Video no disponible', 'El video es privado, fue eliminado o no está disponible.'];
+      if (m.includes('unsupported') || m.includes('not supported'))
+        return ['No soportado', 'Este URL o formato de video no es compatible.'];
+      if (m.includes('timeout') || m.includes('timed out'))
+        return ['Tiempo agotado', 'La conversión tardó demasiado. Intentá con un video más corto.'];
+      return ['Error de conversión', msg || 'Ocurrió un error desconocido. Intentá de nuevo.'];
+    }
+
+    // ── CONVERT MAIN ───────────────────────────
+    let currentBlob = null;
+
+    async function startConvert() {
+      const url = document.getElementById('urlInput').value.trim();
+      const err = validateUrl(url);
+      if (err) { showError('URL inválida', err); return; }
+
+      const btn = document.getElementById('convertBtn');
+      btn.disabled = true;
+      document.getElementById('resultBox').classList.remove('visible');
+      closeError();
+
+      // show preview optimistically
+      document.getElementById('previewTitle').textContent = 'Procesando...';
+      document.getElementById('previewPlatform').textContent = detectPlatform(url);
+      document.getElementById('previewCard').classList.add('visible');
+
+      vizOn = true; animViz();
+
+      const STEPS = [
+        [8,  'Conectando con el servidor...'],
+        [20, 'Obteniendo información del video...'],
+        [40, 'Extrayendo audio...'],
+        [65, 'Convirtiendo a MP3...'],
+        [82, 'Finalizando archivo...'],
+      ];
+      let si = 0;
+      const iv = setInterval(() => {
+        if (si < STEPS.length) {
+          setProgress(STEPS[si][0]);
+          setStatus(STEPS[si][1], 'working');
+          si++;
+        } else { setProgress(0, true); }
+      }, 1600);
+
+      try {
+        const res = await fetch(`${BACKEND_URL}/api/convert`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url }),
+        });
+
+        clearInterval(iv);
+
+        if (!res.ok) {
+          let detail;
+          try { detail = (await res.json()).detail; } catch { detail = 'Error del servidor.'; }
+          throw new Error(detail || 'Error del servidor.');
+        }
+
+        const disp = res.headers.get('Content-Disposition') || '';
+        const match = disp.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        const filename = match ? match[1].replace(/['"]/g, '') : 'audio.mp3';
+
+        setStatus('Descargando archivo...', 'working');
+        setProgress(93);
+
+        const blob = await res.blob();
+        if (currentBlob) URL.revokeObjectURL(currentBlob);
+        currentBlob = URL.createObjectURL(blob);
+
+        const cleanName = decodeURIComponent(filename).replace('.mp3','').replace(/_/g,' ');
+        document.getElementById('previewTitle').textContent = cleanName;
+
+        setProgress(100);
+        setStatus('✓ ¡Listo! Tocá descargar.', 'done');
+
+        document.getElementById('resultName').textContent = filename;
+        document.getElementById('downloadBtn').onclick = () => {
+          const a = document.createElement('a');
+          a.href = currentBlob;
+          a.download = filename;
+          a.click();
+        };
+        document.getElementById('resultBox').classList.add('visible');
+
+        vizOn = false; animViz();
+        btn.disabled = false;
+
+      } catch (err) {
+        clearInterval(iv);
+        vizOn = false; animViz();
+        setProgress(0);
+        setStatus('Error en la conversión.', 'error');
+        document.getElementById('previewCard').classList.remove('visible');
+        const [t, m] = friendlyError(err.message);
+        showError(t, m);
+        btn.disabled = false;
+      }
+    }
+
+    // ── INPUT EVENTS ───────────────────────────
+    document.getElementById('urlInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') startConvert();
+    });
+
+    document.getElementById('urlInput').addEventListener('paste', () => {
+      setTimeout(() => document.getElementById('convertBtn').focus(), 50);
+    });
+
+    // init
+    setProgress(0);
+  </script>
+</body>
+</html>
