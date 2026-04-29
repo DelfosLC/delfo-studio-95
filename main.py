@@ -13,8 +13,6 @@ from pydantic import BaseModel
 
 app = FastAPI(title="Delfo Studio 95 API", version="1.0.0")
 
-# ── CORS ─────────────────────────────────────────────────────
-# In production, replace "*" with your actual frontend domain
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -23,84 +21,59 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ── CONFIG ────────────────────────────────────────────────────
 TMP_DIR = Path("/tmp/delfo")
 TMP_DIR.mkdir(parents=True, exist_ok=True)
 
-MAX_DURATION_SECONDS = 600  # 10 minutes
-
-SUPPORTED_DOMAINS = [
-    "youtube.com",
-    "youtu.be",
-    "tiktok.com",
-    "instagram.com",
-    "www.youtube.com",
-    "www.tiktok.com",
-    "www.instagram.com",
-    "m.youtube.com",
-]
+MAX_DURATION_SECONDS = 600
 
 
-# ── MODELS ────────────────────────────────────────────────────
 class ConvertRequest(BaseModel):
     url: str
 
 
-# ── HELPERS ──────────────────────────────────────────────────
 def validate_url(url: str) -> None:
-    """Raise HTTPException if URL is invalid or unsupported."""
     url = url.strip()
     if not url:
         raise HTTPException(status_code=400, detail="URL is required.")
-
     try:
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https"):
             raise ValueError("scheme")
-        domain = parsed.netloc.lower().replace("www.", "")
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid URL format.")
-
-    # Normalize domain check
     allowed = {"youtube.com", "youtu.be", "tiktok.com", "instagram.com", "m.youtube.com"}
-    if not any(url_domain in parsed.netloc.lower() for url_domain in allowed):
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported platform. Supported: YouTube, TikTok, Instagram Reels.",
-        )
+    if not any(d in parsed.netloc.lower() for d in allowed):
+        raise HTTPException(status_code=400, detail="Unsupported platform. Supported: YouTube, TikTok, Instagram Reels.")
 
 
 async def get_video_duration(url: str) -> float:
-    """Return video duration in seconds using yt-dlp."""
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
         "--no-playlist",
+        "--extractor-args", "youtube:player_client=android",
         "--print", "%(duration)s",
         url,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
     stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=30)
-
     if proc.returncode != 0:
         err = stderr.decode(errors="replace").strip()
         if "private" in err.lower() or "unavailable" in err.lower():
             raise HTTPException(status_code=422, detail="Video is private or unavailable.")
         raise HTTPException(status_code=422, detail=f"Could not fetch video info: {err[:200]}")
-
     raw = stdout.decode().strip()
     try:
         return float(raw)
     except ValueError:
-        # duration not available (e.g. live streams)
         raise HTTPException(status_code=422, detail="Could not determine video duration. Live streams are not supported.")
 
 
 async def download_audio(url: str, output_path: Path) -> None:
-    """Download and convert to MP3 using yt-dlp + ffmpeg."""
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
         "--no-playlist",
+        "--extractor-args", "youtube:player_client=android",
         "--extract-audio",
         "--audio-format", "mp3",
         "--audio-quality", "192K",
@@ -111,17 +84,13 @@ async def download_audio(url: str, output_path: Path) -> None:
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
     )
-
     try:
         stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=120)
     except asyncio.TimeoutError:
         proc.kill()
         raise HTTPException(status_code=504, detail="Conversion timed out. Try a shorter video.")
-
     if proc.returncode != 0:
         err = stderr.decode(errors="replace").strip()
-
-        # Map common yt-dlp errors to user-friendly messages
         if "private" in err.lower():
             raise HTTPException(status_code=422, detail="Video is private or unavailable.")
         if "deleted" in err.lower() or "removed" in err.lower():
@@ -130,22 +99,20 @@ async def download_audio(url: str, output_path: Path) -> None:
             raise HTTPException(status_code=500, detail="FFmpeg failed to process the audio. Please try again.")
         if "no such format" in err.lower() or "not available" in err.lower():
             raise HTTPException(status_code=422, detail="Audio format not available for this video.")
-
         raise HTTPException(status_code=500, detail=f"Download failed: {err[:300]}")
 
 
 def sanitize_filename(name: str, max_len: int = 60) -> str:
-    """Remove unsafe characters from a filename."""
     name = re.sub(r'[^\w\s\-_.]', '', name)
     name = re.sub(r'\s+', '_', name).strip('._')
     return name[:max_len] or "audio"
 
 
 async def get_video_title(url: str) -> str:
-    """Get video title for the output filename."""
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
         "--no-playlist",
+        "--extractor-args", "youtube:player_client=android",
         "--print", "%(title)s",
         url,
         stdout=asyncio.subprocess.PIPE,
@@ -159,54 +126,37 @@ async def get_video_title(url: str) -> str:
         return "audio"
 
 
-# ── ROUTES ────────────────────────────────────────────────────
 @app.get("/")
 def health():
     return {"status": "ok", "service": "Delfo Studio 95 API", "version": "1.0.0"}
-
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
 
-
 @app.post("/api/convert")
 async def convert(req: ConvertRequest):
     url = req.url.strip()
-
-    # 1. Validate URL
     validate_url(url)
 
-    # 2. Check duration
     duration = await get_video_duration(url)
     if duration > MAX_DURATION_SECONDS:
         mins = int(duration // 60)
-        raise HTTPException(
-            status_code=422,
-            detail=f"Video is too long ({mins} min). Maximum allowed: {MAX_DURATION_SECONDS // 60} minutes.",
-        )
+        raise HTTPException(status_code=422, detail=f"Video is too long ({mins} min). Maximum allowed: {MAX_DURATION_SECONDS // 60} minutes.")
 
-    # 3. Get title for filename
     title = await get_video_title(url)
-
-    # 4. Build temp output path
     job_id = uuid.uuid4().hex[:8]
-    # yt-dlp appends .mp3 after conversion, so we use a base path
     base_path = TMP_DIR / f"{job_id}_{title}"
     mp3_path = Path(str(base_path) + ".mp3")
 
-    # 5. Download + convert
     await download_audio(url, base_path)
 
-    # 6. Verify file exists
     if not mp3_path.exists():
-        # yt-dlp sometimes creates slightly different filename; search for it
         candidates = list(TMP_DIR.glob(f"{job_id}_*.mp3"))
         if not candidates:
             raise HTTPException(status_code=500, detail="Conversion produced no output file.")
         mp3_path = candidates[0]
 
-    # 7. Stream response and cleanup after
     filename = mp3_path.name
 
     async def cleanup():
@@ -216,16 +166,12 @@ async def convert(req: ConvertRequest):
         except Exception:
             pass
 
-    # Use FileResponse with background cleanup
+    from starlette.background import BackgroundTask
     response = FileResponse(
         path=str(mp3_path),
         media_type="audio/mpeg",
         filename=filename,
         background=None,
     )
-
-    # Schedule cleanup (Starlette background task)
-    from starlette.background import BackgroundTask
     response.background = BackgroundTask(cleanup)
-
     return response
