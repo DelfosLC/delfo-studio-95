@@ -50,7 +50,7 @@ async def get_video_duration(url: str) -> float:
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
         "--no-playlist",
-        "--extractor-args", "youtube:player_client=android",
+        "--extractor-args", "youtube:player_client=tv_embedded",
         "--print", "%(duration)s",
         url,
         stdout=asyncio.subprocess.PIPE,
@@ -73,7 +73,7 @@ async def download_audio(url: str, output_path: Path) -> None:
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
         "--no-playlist",
-        "--extractor-args", "youtube:player_client=android",
+        "--extractor-args", "youtube:player_client=tv_embedded",
         "--extract-audio",
         "--audio-format", "mp3",
         "--audio-quality", "192K",
@@ -112,7 +112,7 @@ async def get_video_title(url: str) -> str:
     proc = await asyncio.create_subprocess_exec(
         "yt-dlp",
         "--no-playlist",
-        "--extractor-args", "youtube:player_client=android",
+        "--extractor-args", "youtube:player_client=tv_embedded",
         "--print", "%(title)s",
         url,
         stdout=asyncio.subprocess.PIPE,
